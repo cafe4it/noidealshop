@@ -15,6 +15,9 @@ Tinytest.add('test getProductsByCat', function(t){
     t.equal('Call succeeds', rs.msg);
     t.equal(20, rs.products.length);
     t.isTrue(rs.total > 0);
+
+    var rs1 = ali.getProductsByCat2(26,{keywords : 'baby sexy'});
+    console.log(rs1);
     //test return params as object
     /*t.equal(true, Match.test(products, {
         categoryId : Number,
@@ -25,4 +28,4 @@ Tinytest.add('test getProductsByCat', function(t){
     //test return params as queryString
     /*console.log(products)
     t.isTrue(_.isString(products));*/
-})
+});

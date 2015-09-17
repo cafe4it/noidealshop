@@ -72,10 +72,16 @@ ALI.prototype.getProductsByCat = function (catId, params) {
         /*var callSync = Meteor.wrapAsync(listPromotionProduct);
         var rs = callSync(this.apiKey, _.toQueryString(params));
         console.log(rs);*/
+        //var callSync = Async.wrap(listPromotionProductAsync);
         return listPromotionProduct(this.apiKey, _.toQueryString(params));
     }catch(ex){
         dumpError(ex);
     }
+}
+
+ALI.prototype.getProductsByCat2 = function(catId, params){
+    params = _.extend(params, {categoryId : catId});
+    return listPromotionProductAsync(this.apiKey,this.trackingId, params);
 }
 
 ALI.prototype.getProductDetail = function (pId) {
@@ -96,6 +102,57 @@ var listPromotionProduct = function (apiKey, queryString) {
         })
     })
     return rs.result;
+}
+var listPromotionProductAsync = function (apiKey, trackingId, params) {
+    try{
+        var rs = Async.runSync(function(done){
+            async.waterfall([
+                Meteor.bindEnvironment(function(cb){
+                    var url = 'http://gw.api.alibaba.com/openapi/param2/2/portals.open/api.listPromotionProduct/' + apiKey;
+                    if(!_.has(params,'fields')) params = _.extend(params, {fields : defaultFields});
+                    HTTP.call('GET', url, {
+                        query: _.toQueryString(params)
+                    }, function (err, rs) {
+                        if (err) console.log(err);
+                        if (rs) {
+                            var a = verifyResult(0, rs['data']);
+                            cb(null ,a);
+                        }
+                    });
+                }),
+                Meteor.bindEnvironment(function(rs, cb){
+                    var url = 'http://gw.api.alibaba.com/openapi/param2/2/portals.open/api.getPromotionLinks/'+apiKey;
+                    var urlProducts  = _.map(rs.products, function(p){
+                        return p.productUrl;
+                    })
+                    var params = {
+                        trackingId : trackingId,
+                        fields : ['url','promotionUrl'],
+                        urls : urlProducts
+                    }
+                    HTTP.call('GET',url,{
+                        query : _.toQueryString(params)
+                    },function(err, rs1){
+                        if(err) throw new Meteor.Error(err);
+                        if(rs1 && rs1.data){
+                            var promotionUrls = rs1.data.result.promotionUrls;
+                            var products = _.map(rs.products,function(p){
+                                var pUrl = _.findWhere(promotionUrls,{url : p.productUrl});
+                                return _.extend(p, {promotionUrl : pUrl.promotionUrl});
+                            });
+                            cb(null, _.extend(rs,{products : products}));
+                        }
+                    })
+                })
+            ],Meteor.bindEnvironment(function(err, rs){
+                if(err) console.log(err);
+                done(null, rs);
+            }))
+        });
+        return rs.result;
+    }catch(ex){
+        dumpError(ex);
+    }
 }
 
 var verifyResult = function (type, rs) {

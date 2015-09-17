@@ -12,7 +12,7 @@ Package.describe({
 
 Package.onUse(function (api) {
     api.versionsFrom('1.1.0.3');
-    api.use(['http','underscore','momentjs:moment','check','meteorhacks:async'],['server']);
+    api.use(['http','underscore','momentjs:moment','check','meteorhacks:async','peerlibrary:async'],['server']);
     api.addFiles('aliplugin.js',['server']);
     api.export('ALI',['server']);
 });
