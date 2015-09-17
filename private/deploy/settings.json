@@ -1,0 +1,10 @@
+{
+  "public": {
+  },
+  "private": {
+    "AliExpress" : {
+      "key" : "71737",
+      "tracking" : "gooogle"
+    }
+  }
+}
