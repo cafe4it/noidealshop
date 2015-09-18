@@ -17,7 +17,9 @@ Tinytest.add('test getProductsByCat', function(t){
     t.isTrue(rs.total > 0);
 
     var rs1 = ali.getProductsByCat2(26,{keywords : 'baby sexy'});
-    console.log(rs1);
+    var p = rs1.products[0];
+    t.equal(true, _.has(p,'promotionUrl'));
+    //console.log(rs1);
     //test return params as object
     /*t.equal(true, Match.test(products, {
         categoryId : Number,

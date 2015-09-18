@@ -9,39 +9,68 @@ ALI = function (apiKey, trackingId) {
             this.trackingId = aliExpress.tracking;
         }
     }
+
+    this.defaultFields = [
+        'productId',
+        'productTitle',
+        'productUrl',
+        'imageUrl',
+        'originalPrice',
+        'salePrice',
+        'discount',
+        'evaluateScore',
+        'commission',
+        'commissionRate',
+        '30daysCommission',
+        'volume',
+        'packageType',
+        'lotNum',
+        'validTime'
+    ]
+
+    this.sortItems = [
+        {name : 'Price Up', value : 'orignalPriceUp'},
+        {name : 'Price Down', value : 'orignalPriceDown'},
+        {name : 'Seller Rate Down', value : 'sellerRateDown'},
+        {name : 'Commission Rate Up', value : 'commissionRateUp'},
+        {name : 'Commission Rate Down', value : 'commissionRateDown'},
+        {name : 'Volume Down', value : 'volumeDown'},
+        {name : 'Valid Time Up', value : 'validTimeUp'},
+        {name : 'Valid Time Down', value : 'validTimeDown'}
+    ]
 }
 
 ALI.prototype.getCategories = function () {
     return [
-        {name: 'Apparel & Accessories', id: '3'},
-        {name: 'Automobiles & Motorcycles', id: '34'},
-        {name: 'Baby Products', id: '1501'},
-        {name: 'Beauty & Health', id: '66'},
-        {name: 'Computer & Networking', id: '7'},
-        {name: 'Construction & Real Estate', id: '13'},
-        {name: 'Consumer Electronics', id: '44'},
-        {name: 'Customized Products', id: '100008578'},
-        {name: 'Electrical Equipment & Supplies', id: '5'},
-        {name: 'Electronic Components & Supplies', id: '502'},
-        {name: 'Food', id: '2'},
-        {name: 'Furniture', id: '1503'},
-        {name: 'Hair & Accessories', id: '200003655'},
-        {name: 'Hardware', id: '42'},
-        {name: 'Home & Garden', id: '15'},
-        {name: 'Home Appliances', id: '6'},
-        {name: 'Industry & Business', id: '200003590'},
-        {name: 'Jewelry & Watch', id: '36'},
-        {name: 'Lights & Lighting', id: '39'},
-        {name: 'Luggage & Bags', id: '1524'},
-        {name: 'Office & School Supplies', id: '21'},
-        {name: 'Phones & Telecommunications', id: '509'},
-        {name: 'Security & Protection', id: '30'},
-        {name: 'Shoes', id: '322'},
-        {name: 'Special Category', id: '200001075'},
-        {name: 'Sports & Entertainment', id: '18'},
-        {name: 'Tools', id: '1420'},
-        {name: 'Toys & Hobbies', id: '26'},
-        {name: 'Watches', id: '1511'}
+        {name: 'Apparel & Accessories', id: 3},
+        {name: 'Automobiles & Motorcycles', id: 34},
+        {name: 'Baby Products', id: 1501},
+        {name: 'Beauty & Health', id: 66},
+        {name: 'Computer & Networking', id: 7},
+        {name: 'Construction & Real Estate', id: 13},
+        {name: 'Consumer Electronics', id: 44},
+        {name: 'Customized Products', id: 100008578},
+        {name: 'Electrical Equipment & Supplies', id: 5},
+        {name: 'Electronic Components & Supplies', id: 502},
+        {name: 'Food', id: 2},
+        {name: 'Furniture', id: 1503},
+        {name: 'Hair & Accessories', id: 200003655},
+        {name: 'Hardware', id: 42},
+        {name: 'Home & Garden', id: 15},
+        {name: 'Home Appliances', id: 6},
+        {name: 'Industry & Business', id: 200003590},
+        {name: 'Jewelry & Watch', id: 36},
+        {name: 'Lights & Lighting', id: 39},
+        {name: 'Luggage & Bags', id: 1524},
+        {name: 'Office & School Supplies', id: 21},
+        {name: 'Phones & Telecommunications', id: 509},
+        {name: 'Security & Protection', id: 30},
+        {name: 'Shoes', id: 322},
+        {name: 'Special Category', id: 200001075},
+        {name: 'Sports & Entertainment', id: 18},
+        {name: 'Tools', id: 1420},
+        {name: 'Toys & Hobbies', id: 26},
+        {name: 'Watches', id: 1511}
     ]
 }
 var defaultFields = [
@@ -51,7 +80,8 @@ var defaultFields = [
     'imageUrl',
     'originalPrice',
     'salePrice',
-    'discount', 'evaluateScore',
+    'discount',
+    'evaluateScore',
     'commission',
     'commissionRate',
     '30daysCommission',
@@ -61,18 +91,15 @@ var defaultFields = [
     'validTime'
 ]
 ALI.prototype.getProductsByCat = function (catId, params) {
+    if(!this.apiKey || !this.trackingId) return;
     check(catId, Number);
     check(params, Object);
     params = _.extend(params, {categoryId: catId, trackingId: this.trackingId});
     if (!_.has(params, 'fields')) {
-        params = _.extend(params, {fields: defaultFields});
+        params = _.extend(params, {fields: this.defaultFields});
     }
 
     try{
-        /*var callSync = Meteor.wrapAsync(listPromotionProduct);
-        var rs = callSync(this.apiKey, _.toQueryString(params));
-        console.log(rs);*/
-        //var callSync = Async.wrap(listPromotionProductAsync);
         return listPromotionProduct(this.apiKey, _.toQueryString(params));
     }catch(ex){
         dumpError(ex);
@@ -80,6 +107,7 @@ ALI.prototype.getProductsByCat = function (catId, params) {
 }
 
 ALI.prototype.getProductsByCat2 = function(catId, params){
+    if(!this.apiKey || !this.trackingId) return;
     params = _.extend(params, {categoryId : catId});
     return listPromotionProductAsync(this.apiKey,this.trackingId, params);
 }
@@ -121,6 +149,7 @@ var listPromotionProductAsync = function (apiKey, trackingId, params) {
                     });
                 }),
                 Meteor.bindEnvironment(function(rs, cb){
+                    if(rs === undefined) return cb(null, []);
                     var url = 'http://gw.api.alibaba.com/openapi/param2/2/portals.open/api.getPromotionLinks/'+apiKey;
                     var urlProducts  = _.map(rs.products, function(p){
                         return p.productUrl;
